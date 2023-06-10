@@ -136,3 +136,16 @@ def test_invalid_movie_update(client, movie):
     movie[Fields.release_year] = "1999"
     response = client.put(f"/movies/{movie[Fields.id]}", json=movie)
     assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_get_all_movies(client, movie):
+    expected_list = []
+    for _ in range(10):
+        response = client.post(f"/movies", json=movie)
+        assert response.status_code == HTTPStatus.OK
+        movie[Fields.id] = response.get_json().get(Fields.id)
+        expected_list.append(movie.copy())
+
+    response = client.get("/movies")
+    assert response.status_code == HTTPStatus.OK
+    assert response.get_json() == expected_list

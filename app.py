@@ -66,6 +66,25 @@ def get_movie(id):
     return {key: result[key] for key in result.keys()}
 
 
+@app.get('/movies')
+def get_movies():
+    app.logger.debug("Retrieving all movies")
+    db_curr = db.get_db().cursor()
+    result = None
+    try:
+        db_curr.execute("SELECT * FROM movies")
+        result = db_curr.fetchall()
+    except Exception as e:
+        app.logger.error(e, exc_info=True)
+        flask.abort(HTTPStatus.INTERNAL_SERVER_ERROR)
+    finally:
+        db_curr.close()
+
+    if result is None:
+        return []
+    return [{key: row[key] for key in row.keys()} for row in result]
+
+
 @app.put('/movies/<int:id>')
 def update_movie(id):
     app.logger.debug("Updating movie with id: %s", id)
