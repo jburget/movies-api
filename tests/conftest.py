@@ -23,3 +23,11 @@ def client(server):
 @pytest.fixture()
 def runner(server):
     return app.test_cli_runner()
+
+@pytest.fixture()
+def movie():
+    return {
+        "title": "The Matrix",
+        "description": "The Matrix description",
+        "release_year": 1999
+    }

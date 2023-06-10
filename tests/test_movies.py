@@ -77,3 +77,62 @@ def test_invalid_movie_id_get(client):
 
     response = client.get("/movies/15648567")
     assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_movie_update(client, movie):
+    response = client.post("/movies", json=movie)
+    assert response.status_code == HTTPStatus.OK
+    movie[Fields.id] = response.get_json().get(Fields.id)
+
+    # update title
+    movie[Fields.title] = "The Matrix 2"
+    response = client.put(f"/movies/{movie[Fields.id]}", json=movie)
+    assert response.status_code == HTTPStatus.OK
+    assert response.get_json() == movie
+
+    # update description
+    movie[Fields.description] = "The Matrix description 2"
+    response = client.put(f"/movies/{movie[Fields.id]}", json=movie)
+    assert response.status_code == HTTPStatus.OK
+    assert response.get_json() == movie
+
+    # update release_year
+    movie[Fields.release_year] = 2000
+    response = client.put(f"/movies/{movie[Fields.id]}", json=movie)
+    assert response.status_code == HTTPStatus.OK
+    assert response.get_json() == movie
+
+    # check if updated correctly in database
+    response = client.get(f"/movies/{movie[Fields.id]}")
+    assert response.status_code == HTTPStatus.OK
+    assert response.get_json() == movie
+
+    # check deleting description
+    del movie[Fields.description]
+    response = client.put(f"/movies/{movie[Fields.id]}", json=movie)
+    movie[Fields.description] = None
+    assert response.status_code == HTTPStatus.OK
+    assert response.get_json() == movie
+
+
+def test_invalid_movie_update(client, movie):
+    response = client.post("/movies", json=movie)
+    assert response.status_code == HTTPStatus.OK
+    movie[Fields.id] = response.get_json().get(Fields.id)
+
+    # invalid movie id
+    response = client.put(f"/movies/{movie[Fields.id] + 1}", json=movie)
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+    response = client.put("/movies/0", json=movie)
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+    # missing title
+    del movie[Fields.title]
+    response = client.put(f"/movies/{movie[Fields.id]}", json=movie)
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    # wrong data type of release_year
+    movie[Fields.release_year] = "1999"
+    response = client.put(f"/movies/{movie[Fields.id]}", json=movie)
+    assert response.status_code == HTTPStatus.BAD_REQUEST
