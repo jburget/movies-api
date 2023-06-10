@@ -1,3 +1,6 @@
+import sqlite3
+from pprint import pprint
+
 import flask
 from flask import Flask, request
 import db
@@ -45,6 +48,25 @@ def post_movie():
         db_curr.close()
 
     return data
+
+@app.get('/movies/<int:id>')
+def get_movie(id):
+    app.logger.debug("Get movie with id: %s", id)
+    db_conn = db.get_db()
+    db_curr = db_conn.cursor()
+    result = None
+    try:
+        db_curr.execute("SELECT * FROM movies WHERE id = ?", (id,))
+        result = db_curr.fetchone()
+    except Exception as e:
+        app.logger.error(e, exc_info=True)
+        flask.abort(HTTPStatus.INTERNAL_SERVER_ERROR)
+    finally:
+        db_curr.close()
+
+    if result is None:
+        return flask.abort(HTTPStatus.NOT_FOUND)
+    return {key: result[key] for key in result.keys()}
 
 
 if __name__ == '__main__':
