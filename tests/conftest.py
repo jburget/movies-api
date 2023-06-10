@@ -1,5 +1,6 @@
 import pytest
 from app import app
+from db import init_db
 
 
 @pytest.fixture()
@@ -7,10 +8,11 @@ def server():
     app.config.update({
         "TESTING": True,
     })
+    with app.app_context():
+        init_db()
 
     yield app
 
-    # TODO: Clear the database
 
 
 @pytest.fixture()
