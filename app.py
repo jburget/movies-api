@@ -31,7 +31,7 @@ def post_movie():
         db_curr.execute(
                 "INSERT INTO movies(title, description, release_year) VALUES (:title, :description, :release_year)",
                 data)
-        row_id = db_curr.execute("SELECT last_insert_rowid() FROM movies").fetchone()[0]
+        row_id = db_curr.execute("SELECT last_insert_rowid() FROM movies").fetchone()['last_insert_rowid()']
         app.logger.debug("Inserted row id: %s", row_id)
         data[Fields.id] = row_id
 
@@ -47,7 +47,7 @@ def get_movie(id):
 
     if result is None:
         return flask.abort(HTTPStatus.NOT_FOUND)
-    return {key: result[key] for key in result.keys()}
+    return result
 
 
 @app.get('/movies')
@@ -60,7 +60,7 @@ def get_movies():
 
     if result is None:
         return []
-    return [{key: row[key] for key in row.keys()} for row in result]
+    return result
 
 
 @app.put('/movies/<int:id>')
@@ -80,7 +80,7 @@ def update_movie(id):
         affected_rows = db_curr.execute("SELECT total_changes() FROM movies").fetchone()
         app.logger.debug("Affected rows: %s", affected_rows)
 
-    if affected_rows is None or not affected_rows[0]:
+    if affected_rows is None or not affected_rows['total_changes()']:
         flask.abort(HTTPStatus.NOT_FOUND)
     return data
 
