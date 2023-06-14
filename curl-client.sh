@@ -2,9 +2,10 @@
 
 MOVIE_API_PORT=5000
 MOVIE_API_HOST=127.0.0.1
-MOVIE_URL="$MOVIE_API_HOST:$MOVIE_API_PORT/movies"
 
 LAST_POSTED_ID=""  # contains the id of the last posted movie
+
+MOVIE_URL="$MOVIE_API_HOST:$MOVIE_API_PORT/movies"
 
 function create-request-json() {
     [ $# -ne 2 ] && [ $# -ne 3 ] && echo "Usage: create-request-json <title> <release_year> [description]" >&2 && return 1
