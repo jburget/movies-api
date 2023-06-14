@@ -1,4 +1,6 @@
 import sqlite3
+from http import HTTPStatus
+import flask
 from flask import current_app, g, cli
 import click
 
@@ -38,3 +40,25 @@ def init_db_command():
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
+
+class SQLiteCurr:
+    def __init__(self, app):
+        self.app = app
+        self.connection = get_db()
+        self.cursor = None
+
+    def __enter__(self):
+        self.cursor = self.connection.cursor()
+        return self.cursor
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_tb is None:
+            self.connection.commit()
+        else:
+            self.connection.rollback()
+            self.cursor.close()
+
+            self.app.logger.exception(exc_val, exc_info=(exc_type, exc_val, exc_tb), stack_info=True)
+            flask.abort(HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        self.cursor.close()

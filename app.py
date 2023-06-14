@@ -1,6 +1,7 @@
 import flask
 from flask import Flask, request
 import db
+from db import SQLiteCurr
 from const import Fields
 from http import HTTPStatus
 
@@ -26,38 +27,23 @@ def post_movie():
         flask.abort(HTTPStatus.BAD_REQUEST)
 
     data = request.get_json()
-    db_conn = db.get_db()
-    db_curr = db_conn.cursor()
-    try:
+    with SQLiteCurr(app) as db_curr:
         db_curr.execute(
                 "INSERT INTO movies(title, description, release_year) VALUES (:title, :description, :release_year)",
                 data)
-        db_conn.commit()
         row_id = db_curr.execute("SELECT last_insert_rowid() FROM movies").fetchone()[0]
         app.logger.debug("Inserted row id: %s", row_id)
         data[Fields.id] = row_id
-    except Exception as e:
-        app.logger.error(e, exc_info=True)
-        flask.abort(HTTPStatus.INTERNAL_SERVER_ERROR)
-    finally:
-        db_curr.close()
 
     return data
 
 @app.get('/movies/<int:id>')
 def get_movie(id):
     app.logger.debug("Get movie with id: %s", id)
-    db_conn = db.get_db()
-    db_curr = db_conn.cursor()
     result = None
-    try:
+    with SQLiteCurr(app) as db_curr:
         db_curr.execute("SELECT * FROM movies WHERE id = ?", (id,))
         result = db_curr.fetchone()
-    except Exception as e:
-        app.logger.error(e, exc_info=True)
-        flask.abort(HTTPStatus.INTERNAL_SERVER_ERROR)
-    finally:
-        db_curr.close()
 
     if result is None:
         return flask.abort(HTTPStatus.NOT_FOUND)
@@ -67,16 +53,10 @@ def get_movie(id):
 @app.get('/movies')
 def get_movies():
     app.logger.debug("Retrieving all movies")
-    db_curr = db.get_db().cursor()
     result = None
-    try:
+    with SQLiteCurr(app) as db_curr:
         db_curr.execute("SELECT * FROM movies")
         result = db_curr.fetchall()
-    except Exception as e:
-        app.logger.error(e, exc_info=True)
-        flask.abort(HTTPStatus.INTERNAL_SERVER_ERROR)
-    finally:
-        db_curr.close()
 
     if result is None:
         return []
@@ -91,22 +71,14 @@ def update_movie(id):
     data = request.get_json()
     data[Fields.id] = id
 
-    db_conn = db.get_db()
-    db_curr = db_conn.cursor()
     affected_rows = None
-    try:
+    with SQLiteCurr(app) as db_curr:
         db_curr.execute(
                 "UPDATE movies SET"
                 " title = :title, description = :description, release_year = :release_year"
                 "  WHERE id = :id", data)
-        db_conn.commit()
         affected_rows = db_curr.execute("SELECT total_changes() FROM movies").fetchone()
         app.logger.debug("Affected rows: %s", affected_rows)
-    except Exception as e:
-        app.logger.error(e, exc_info=True)
-        flask.abort(HTTPStatus.INTERNAL_SERVER_ERROR)
-    finally:
-        db_curr.close()
 
     if affected_rows is None or not affected_rows[0]:
         flask.abort(HTTPStatus.NOT_FOUND)
