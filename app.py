@@ -15,6 +15,8 @@ def hello():
     return "Hello, world!"
 
 def validate_request(data: dict) -> bool:
+    if not isinstance(data, dict):
+        return False
     if not isinstance(data.get(Fields.description), str):
         data[Fields.description] = None
     return isinstance(data.get(Fields.title), str) \
