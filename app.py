@@ -13,21 +13,19 @@ db.init_app(app)
 def hello():
     return "Hello, world!"
 
-def is_valid_movie(data: dict) -> bool:
+def validate_request(data: dict) -> bool:
+    if not isinstance(data.get(Fields.description), str):
+        data[Fields.description] = None
     return isinstance(data.get(Fields.title), str) \
         and isinstance(data.get(Fields.release_year), int)
 
 @app.post('/movies')
 def post_movie():
     app.logger.debug(request.data)
-    if not request.is_json or not is_valid_movie(request.get_json()):
+    if not validate_request(request.get_json()):
         flask.abort(HTTPStatus.BAD_REQUEST)
 
     data = request.get_json()
-    # will ignore missing or invalid description field
-    if not isinstance(data.get(Fields.description), str):
-        data[Fields.description] = None
-
     db_conn = db.get_db()
     db_curr = db_conn.cursor()
     try:
@@ -88,12 +86,10 @@ def get_movies():
 @app.put('/movies/<int:id>')
 def update_movie(id):
     app.logger.debug("Updating movie with id: %s", id)
-    if not request.is_json or not is_valid_movie(request.get_json()):
+    if not validate_request(request.get_json()):
         flask.abort(HTTPStatus.BAD_REQUEST)
     data = request.get_json()
     data[Fields.id] = id
-    if not isinstance(data.get(Fields.description), str):
-        data[Fields.description] = None
 
     db_conn = db.get_db()
     db_curr = db_conn.cursor()
