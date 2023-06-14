@@ -15,6 +15,13 @@ flask run
 ## Windows installation
 If you are using Windows, please switch to Linux and continue with steps above.
 
+## Docker installation
+```bash
+# build the image
+docker build https://github.com/jburget/movies-api.git#main --tag movies-api
+# run the container
+docker run --rm -p 5000:5000 --name movies-api movies-api
+```
 ## Run tests with pytest
 ```bash
 pip install -r test-requirements.txt
