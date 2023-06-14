@@ -43,3 +43,5 @@ Usage: post-movie <title> <release_year> [description]
 Usage: get-movies [id]
 Usage: edit-movie <id> <title> <release_year> [description]
 ```
+
+Some parts of the code may come from the official [Flask](https://flask.palletsprojects.com/) or [sqlite3](https://docs.python.org/3/library/sqlite3.html) documentation
